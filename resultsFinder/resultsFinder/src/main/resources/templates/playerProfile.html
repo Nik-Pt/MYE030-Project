@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Player Profile with Draggable Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 40px;
+            position: relative;
+        }
+
+        .profile-box {
+            background-color: #fff;
+            max-width: 600px;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: absolute;
+            top: 40px;
+            left: 40px;
+            z-index: 1;
+            width: 40%;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+        }
+
+        li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 30px;
+            color: #0066cc;
+            text-align: center;
+        }
+
+        .chart-container {
+            width: 500px;
+            height: 300px;
+            position: absolute;
+            top: 40px;
+            left: 700px;
+            cursor: grab;
+            background: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            z-index: 10;
+        }
+
+        .resize-handle {
+            width: 15px;
+            height: 15px;
+            background: gray;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            cursor: se-resize;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="profile-box">
+        <h1 th:text="${player.scorer} + ' Profile'"></h1>
+        <ul>
+            <li><strong>Team:</strong> <span th:text="${player.team}"></span></li>
+            <li><strong>Starting Year:</strong> <span th:text="${player.starting_year}"></span></li>
+            <li><strong>Ending Year:</strong> <span th:text="${player.ending_year}"></span></li>
+            <li><strong>Total Goals:</strong> <span th:text="${player.total_goals}"></span></li>
+            <li><strong>Max Goals per Match:</strong> <span th:text="${player.max_goals_per_match}"></span></li>
+            <li><strong>Goals Ratio:</strong> <span th:text="${player.goals_ratio}"></span></li>
+        </ul>
+        <div class="back-link"><a href="javascript:history.back()">← Go Back</a></div>
+    </div>
+
+    <div id="draggable-chart" class="chart-container">
+        <canvas id="ratioChart"></canvas>
+        <div class="resize-handle"></div>
+    </div>
+
+    <script th:inline="javascript">
+        var years = /*[[${years}]]*/ [];
+        var ratio = /*[[${ratio}]]*/ [];
+
+        const ctx = document.getElementById('ratioChart').getContext('2d');
+        const ratioChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: years,
+                datasets: [
+                    {
+                        label: 'Goals Ratio per Year',
+                        data: ratio,
+                        borderColor: 'orange',
+                        backgroundColor: 'rgba(255,165,0,0.2)',
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: false,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { title: { display: true, text: 'Years' } },
+                    y: { title: { display: true, text: 'Goals Ratio' } }
+                }
+            }
+        });
+
+        ratioChart.resize();
+
+        // Draggable
+        const chartContainer = document.getElementById("draggable-chart");
+        let isDragging = false, offsetX = 0, offsetY = 0;
+
+        chartContainer.addEventListener("mousedown", function(e) {
+            if (e.target.classList.contains("resize-handle")) return;
+            isDragging = true;
+            offsetX = e.clientX - chartContainer.offsetLeft;
+            offsetY = e.clientY - chartContainer.offsetTop;
+            chartContainer.style.cursor = "grabbing";
+        });
+
+        document.addEventListener("mousemove", function(e) {
+            if (isDragging) {
+                chartContainer.style.left = (e.clientX - offsetX) + "px";
+                chartContainer.style.top = (e.clientY - offsetY) + "px";
+            }
+        });
+
+        document.addEventListener("mouseup", function() {
+            isDragging = false;
+            chartContainer.style.cursor = "grab";
+        });
+
+        // Resizable
+        const resizeHandle = document.querySelector(".resize-handle");
+        let isResizing = false, startX = 0, startY = 0, startWidth = 0, startHeight = 0;
+
+        resizeHandle.addEventListener("mousedown", function(e) {
+            isResizing = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startWidth = chartContainer.offsetWidth;
+            startHeight = chartContainer.offsetHeight;
+            e.preventDefault();
+        });
+
+        document.addEventListener("mousemove", function(e) {
+            if (isResizing) {
+                let newWidth = Math.max(200, startWidth + (e.clientX - startX));
+                let newHeight = Math.max(150, startHeight + (e.clientY - startY));
+                chartContainer.style.width = newWidth + "px";
+                chartContainer.style.height = newHeight + "px";
+                ratioChart.resize();
+            }
+        });
+
+        document.addEventListener("mouseup", function() {
+            isResizing = false;
+        });
+    </script>
+
+</body>
+</html>

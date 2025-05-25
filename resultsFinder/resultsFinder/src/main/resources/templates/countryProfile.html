@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Country Profile with Draggable Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 40px;
+            position: relative;
+        }
+
+        .profile-box {
+            background-color: #fff;
+            max-width: 600px;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: absolute;
+            top: 40px;
+            left: 40px;
+            z-index: 1;
+            width: 40%;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+        }
+
+        li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 30px;
+            color: #0066cc;
+            text-align: center;
+        }
+
+        .chart-container {
+            width: 500px;
+            height: 300px;
+            position: absolute;
+            top: 40px;
+            left: 700px;
+            cursor: grab;
+            background: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            z-index: 10;
+        }
+
+        .resize-handle {
+            width: 15px;
+            height: 15px;
+            background: gray;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            cursor: se-resize;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="profile-box">
+        <h1 th:text="${country.Display_Name} + ' Profile'"></h1>
+		<p style="text-align: center; margin-bottom: 10px; font-style: italic;">Filter for the team's match results</p>
+		<form th:action="@{/resultsFilter}" method="get" style="margin-bottom: 20px; text-align: center;">
+			<input type="hidden" name="ISO_Code" th:value="${country.ISO_Code}" />
+		    <label for="min">Min Year:</label>
+		    <input type="number" id="min" name="min" placeholder="e.g., 1872" style="width: 80px; margin: 0 10px;" required>
+
+		    <label for="max">Max Year:</label>
+		    <input type="number" id="max" name="max" placeholder="e.g., 2024" style="width: 80px; margin: 0 10px;" required>
+
+		    <button type="submit" style="padding: 5px 15px; margin-left: 10px;">Search</button>
+		</form>
+        <ul>
+            <li><strong>ISO Code:</strong> <span th:text="${country.ISO_Code}"></span></li>
+            <li><strong>Official Name:</strong> <span th:text="${country.Official_Name}"></span></li>
+            <li><strong>Years Active:</strong> <span th:text="${country.start_year} + ' / ' + ${country.end_year}"></span></li>
+            <li><strong>Total Matches:</strong> <span th:text="${country.total_matches}"></span></li>
+            <li><strong>Total Wins:</strong> <span th:text="${country.total_wins}"></span></li>
+            <li><strong>Total Losses:</strong> <span th:text="${country.total_losses}"></span></li>
+            <li><strong>Total Ties:</strong> <span th:text="${country.total_ties}"></span></li>
+            <li><strong>Home Matches:</strong> <span th:text="${country.home_matches}"></span></li>
+            <li><strong>Home Wins:</strong> <span th:text="${country.home_wins}"></span></li>
+            <li><strong>Home Losses:</strong> <span th:text="${country.home_losses}"></span></li>
+            <li><strong>Home Ties:</strong> <span th:text="${country.home_ties}"></span></li>
+            <li><strong>Away Matches:</strong> <span th:text="${country.away_matches}"></span></li>
+            <li><strong>Away Wins:</strong> <span th:text="${country.away_wins}"></span></li>
+            <li><strong>Away Losses:</strong> <span th:text="${country.away_losses}"></span></li>
+            <li><strong>Away Ties:</strong> <span th:text="${country.away_ties}"></span></li>
+        </ul>
+        <div class="back-link"><a href="javascript:history.back()">← Go Back</a></div>
+    </div>
+
+    <div id="draggable-chart" class="chart-container">
+        <canvas id="myLineChart"></canvas>
+        <div class="resize-handle"></div>
+    </div>
+
+    <script th:inline="javascript">
+        var wins = /*[[${wins}]]*/ [];
+        var losses = /*[[${losses}]]*/ [];
+        var draws = /*[[${draws}]]*/ [];
+        var matches = /*[[${matches}]]*/ [];
+		var years = /*[[${years}]]*/ [];
+
+        const ctx = document.getElementById('myLineChart').getContext('2d');
+        const myLineChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: years,
+                datasets: [
+                    {
+                        label: 'Wins',
+                        data: wins,
+                        borderColor: 'blue',
+                        backgroundColor: 'rgba(0, 0, 255, 0.2)',
+                        fill: false
+                    },
+                    {
+                        label: 'Losses',
+                        data: losses,
+                        borderColor: 'red',
+                        backgroundColor: 'rgba(255, 0, 0, 0.2)',
+                        fill: false
+                    },
+                    {
+                        label: 'Draws',
+                        data: draws,
+                        borderColor: 'green',
+                        backgroundColor: 'rgba(0, 255, 0, 0.2)',
+                        fill: false
+                    },
+					{
+                        label: 'Matches',
+                        data: matches,
+                        borderColor: 'purple',
+                        backgroundColor: 'rgba(128, 0, 128, 0.2)',
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: false,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { title: { display: true, text: '#Years' } },
+                    y: { title: { display: true, text: 'W/L/D / Matches' } }
+                }
+            }
+        });
+		
+		myLineChart.resize();
+
+        // Draggable functionality
+        const chartContainer = document.getElementById("draggable-chart");
+        let isDragging = false, offsetX = 0, offsetY = 0;
+
+        chartContainer.addEventListener("mousedown", function(e) {
+            if (e.target.classList.contains("resize-handle")) return;
+            isDragging = true;
+            offsetX = e.clientX - chartContainer.offsetLeft;
+            offsetY = e.clientY - chartContainer.offsetTop;
+            chartContainer.style.cursor = "grabbing";
+        });
+
+        document.addEventListener("mousemove", function(e) {
+            if (isDragging) {
+                chartContainer.style.left = (e.clientX - offsetX) + "px";
+                chartContainer.style.top = (e.clientY - offsetY) + "px";
+            }
+        });
+
+        document.addEventListener("mouseup", function() {
+            isDragging = false;
+            chartContainer.style.cursor = "grab";
+        });
+
+        // Resize functionality
+        const resizeHandle = document.querySelector(".resize-handle");
+        let isResizing = false, startX = 0, startY = 0, startWidth = 0, startHeight = 0;
+
+        resizeHandle.addEventListener("mousedown", function(e) {
+            isResizing = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startWidth = chartContainer.offsetWidth;
+            startHeight = chartContainer.offsetHeight;
+            e.preventDefault();
+        });
+
+        document.addEventListener("mousemove", function(e) {
+            if (isResizing) {
+                let newWidth = Math.max(200, startWidth + (e.clientX - startX));
+                let newHeight = Math.max(150, startHeight + (e.clientY - startY));
+                chartContainer.style.width = newWidth + "px";
+                chartContainer.style.height = newHeight + "px";
+                myLineChart.resize();
+            }
+        });
+
+        document.addEventListener("mouseup", function() {
+            isResizing = false;
+        });
+    </script>
+
+</body>
+</html>

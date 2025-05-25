@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Boogle - Results</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            padding: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 48px;
+            margin-bottom: 30px;
+        }
+
+        .results-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .result-card {
+            background-color: #fff;
+            width: 250px;
+            padding: 25px;
+            border-radius: 18px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            text-decoration: none;
+            color: inherit;
+            text-align: center;
+            border: 2px solid #ccc; /* Border added for card-like effect */
+        }
+
+        .result-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            border-color: #888; /* Darker border on hover */
+        }
+
+        .result-card h4 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        button.card {
+            all: unset;
+            cursor: pointer;
+            display: block;
+            width: 100%;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 50px;
+            font-size: 18px;
+            color: #1a73e8;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Boogle Results</h1>
+
+    <div class="results-container" th:if="${type == 'country'}">
+        <div th:each="country : ${results}" class="result-card">
+            <form th:action="@{/country}" method="get">
+                <input type="hidden" name="isoCode" th:value="${country.ISO_Code}">
+                <button type="submit" class="card">
+                    <h4 th:text="${country.Display_Name}"></h4>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="results-container" th:if="${type == 'player'}">
+        <div th:each="player : ${results}" class="result-card">
+            <form th:action="@{/player}" method="get">
+                <input type="hidden" name="scorer" th:value="${player.scorer}">
+                <input type="hidden" name="isoCode" th:value="${player.ISO_Code}">
+                <button type="submit" class="card">
+                    <h2 th:text="${player.scorer}"></h2>
+                    <h4 th:text="${player.team}"></h4>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <a href="/" class="back-link">← Back to Boogle</a>
+</body>
+</html>

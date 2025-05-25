@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Yearly Match Statistics</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f3f4f6;
+            padding: 40px;
+            color: #1f2937;
+        }
+
+        .profile-box {
+            background-color: #ffffff;
+            max-width: 1100px;
+            margin: auto;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            text-align: left;
+            padding-left: 50px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0 auto;
+            text-align: left;
+            max-width: 360px;
+        }
+
+        li {
+            padding: 14px 0;
+            border-bottom: 2px solid #d1d5db;
+            font-size: 16px;
+        }
+
+        form button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            font-size: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 16px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        form button:hover {
+            background-color: #1d4ed8;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 30px;
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        #barChartContainer {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .chart-wrapper {
+            display: block;
+            width: 700px;
+            height: 400px;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            background-color: #ffffff;
+            cursor: move;
+            resize: both;
+            overflow: auto;
+            margin: 40px auto 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .stats-filters-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 80px;
+            margin-top: 30px;
+        }
+
+        .stats-box {
+            max-width: 400px;
+            flex: 1;
+            text-align: left;
+            padding-left: 50px;
+        }
+
+        .filter-box {
+            min-width: 350px;
+            text-align: left;
+            flex: 1;
+        }
+
+        .filter-box h2 {
+            margin-bottom: 16px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .filter-grid input {
+            padding: 6px 8px;
+            font-size: 13px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        .apply-button-wrapper {
+            grid-column: 1 / -1;
+            margin-top: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="profile-box">
+    <h1 th:text="'Match Stats for the year ' + ${query}"></h1>
+
+    <div class="stats-filters-container">
+        <!-- Match Stats -->
+        <div class="stats-box">
+            <ul th:if="${matches != null and !matches.isEmpty()}">
+                <li><strong>Total Matches:</strong> <span th:text="${matches[0].total_year_matches}"></span></li>
+                <li><strong>Total Draws:</strong> <span th:text="${matches[0].total_year_draws}"></span></li>
+                <li><strong>Matches With Shootouts:</strong> <span th:text="${matches[0].had_shootouts}"></span></li>
+            </ul>
+            <p th:if="${matches == null or matches.isEmpty()}" style="color: red; font-weight: 500;">No stats found for this year.</p>
+        </div>
+
+        <!-- Filter Form -->
+        <div class="filter-box">
+            <h2 th:text="'Filters for match results in the year ' + ${query}"></h2>
+            <form method="get" action="/displayYearMatches">
+                <input type="hidden" name="year" th:value="${query}" />
+                <div class="filter-grid">
+                    <input type="text" name="homeRegion" placeholder="Home Region" />
+                    <input type="text" name="awayRegion" placeholder="Away Region" />
+                    <input type="text" name="homeStatus" placeholder="Home Status" />
+                    <input type="text" name="awayStatus" placeholder="Away Status" />
+                    <input type="text" name="homeDevelopingOrDeveloped" placeholder="Home Dev Level" />
+                    <input type="text" name="awayDevelopingOrDeveloped" placeholder="Away Dev Level" />
+                    <div class="apply-button-wrapper">
+                        <button type="submit">Apply Filters</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <form method="get" action="/displayCountriesStats">
+        <input type="hidden" name="query" th:value="${query}" />
+        <button type="submit" style="margin-left: 170px;">Show Country Chart</button>
+    </form>
+
+    <div id="barChartContainer"
+         class="chart-wrapper"
+         th:if="${stats != null and #lists.size(stats) > 0}"
+         style="display: block;">
+        <canvas id="yearBarChart" width="700" height="400"></canvas>
+    </div>
+
+    <a th:href="@{/}" class="back-link">← Back to Boogle</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+
+<script th:inline="javascript">
+    const stats = [[${stats}]];
+    const countries = [[${countries}]];
+
+    if (stats.length > 0 && countries.length > 0) {
+        const countryNames = countries;
+        const totalMatches = stats.map(s => s.total_year_matches);
+        const wins = stats.map(s => s.total_year_wins);
+        const draws = stats.map(s => s.total_year_draws);
+        const losses = stats.map(s => s.total_year_losses);
+        const shootouts = stats.map(s => s.had_shootouts);
+
+        const ctx = document.getElementById('yearBarChart').getContext('2d');
+        window.yearBarChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: countryNames,
+                datasets: [
+                    {
+                        label: 'Total Matches',
+                        data: totalMatches,
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                    },
+                    {
+                        label: 'Wins',
+                        data: wins,
+                        backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                    },
+                    {
+                        label: 'Draws',
+                        data: draws,
+                        backgroundColor: 'rgba(255, 206, 86, 0.7)',
+                    },
+                    {
+                        label: 'Losses',
+                        data: losses,
+                        backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                    },
+                    {
+                        label: 'Shootouts',
+                        data: shootouts,
+                        backgroundColor: 'rgba(153, 102, 255, 0.7)',
+                    }
+                ]
+            },
+            options: {
+                responsive: false,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        stacked: false,
+                        title: { display: true, text: 'Countries' }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Count' }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'top' },
+                    title: { display: true, text: 'Match Breakdown by Country' },
+                    zoom: {
+                        pan: {
+                            enabled: true,
+                            mode: 'x',
+                            modifierKey: 'ctrl'
+                        },
+                        zoom: {
+                            wheel: { enabled: true },
+                            pinch: { enabled: true },
+                            mode: 'x'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    interact('#barChartContainer')
+      .draggable({
+        listeners: {
+          move(event) {
+            const target = event.target;
+            const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+            const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+            target.style.transform = `translate(${x}px, ${y}px)`;
+            target.setAttribute('data-x', x);
+            target.setAttribute('data-y', y);
+          }
+        }
+      })
+      .resizable({
+        edges: { left: true, right: true, bottom: true, top: true },
+        listeners: {
+          move(event) {
+            let { x, y } = event.target.dataset;
+            x = (parseFloat(x) || 0);
+            y = (parseFloat(y) || 0);
+            event.target.style.width = `${event.rect.width}px`;
+            event.target.style.height = `${event.rect.height}px`;
+            x += event.deltaRect.left;
+            y += event.deltaRect.top;
+            event.target.style.transform = `translate(${x}px, ${y}px)`;
+            event.target.dataset.x = x;
+            event.target.dataset.y = y;
+            const canvas = event.target.querySelector('canvas');
+            if (canvas) {
+                canvas.width = event.rect.width;
+                canvas.height = event.rect.height;
+                window.yearBarChart.resize();
+            }
+          }
+        },
+        modifiers: [
+          interact.modifiers.restrictSize({
+            min: { width: 300, height: 200 },
+            max: { width: 1200, height: 800 }
+          })
+        ],
+        inertia: true
+      });
+</script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Boogle Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .logo {
+            font-size: 80px;
+            font-weight: bold;
+            color: #4285f4;
+            margin-bottom: 40px;
+        }
+
+        .search-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        input[type="text"] {
+            width: 50%;
+            padding: 10px;
+            font-size: 18px;
+            border: 1px solid #dcdcdc;
+            border-radius: 24px;
+            outline: none;
+            margin-bottom: 20px;
+        }
+
+        .options {
+            font-size: 18px;
+        }
+
+        .options label {
+            margin: 0 10px;
+        }
+
+        .submit-btn {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">Boogle</div>
+        <form action="/search" method="get" class="search-box">
+            <input type="text" name="query" placeholder="Search...">
+            <div class="options">
+                <label><input type="radio" name="type" value="player" checked> Player</label>
+                <label><input type="radio" name="type" value="year"> Year</label>
+                <label><input type="radio" name="type" value="country"> Country</label>
+            </div>
+            <div class="submit-btn">
+                <button type="submit">Search</button>
+                <button type="submit" formaction="/show_leaderboard" formmethod="get">Leaderboard</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
