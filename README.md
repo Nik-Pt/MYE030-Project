@@ -108,6 +108,7 @@ You should see the web interface with football statistics.
 project-root/
 ├── Data/                                 # CSV files to be loaded
 ├── resultsFinder/resultsFinder           # Java Spring Boot application
+├── DB_backup_and_schema                  # DB related folder
 ├── Scripts/                              # Scripts to create/populate the database
 ├── README.md                             # This file
 ```
