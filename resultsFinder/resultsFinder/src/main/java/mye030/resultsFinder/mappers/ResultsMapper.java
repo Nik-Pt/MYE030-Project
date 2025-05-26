@@ -17,8 +17,8 @@ public interface ResultsMapper extends JpaRepository<Results, ResultsKey>{
 			+ "FROM Results r "
 			+ "JOIN Country c1 ON r.home_team = c1.ISO_Code "
 			+ "JOIN Country c2 ON r.away_team = c2.ISO_Code "
-			+ "WHERE YEAR(r.date) > :minYear "
-			+ "AND YEAR(r.date) < :maxYear "
+			+ "WHERE YEAR(r.date) >= :minYear "
+			+ "AND YEAR(r.date) <= :maxYear "
 			+ "AND (r.home_team = :ISO_Code OR r.away_team = :ISO_Code)")
 	List<ResultsDTO> findAllMatchesYtoY(@Param("minYear") int minYear, @Param("maxYear") int maxYear, @Param("ISO_Code") int ISO_Code);
 	
