@@ -27,7 +27,7 @@ Follow these steps to set up and run the project locally:
 
 Make sure you have the following installed:
 
-- [Java](https://www.oracle.com/java/technologies/javase-downloads.html) (JDK 17 or later)
+- [Java](https://www.oracle.com/java/technologies/javase-downloads.html) (JDK 16 or later)
 - [Python](https://www.python.org/downloads/) (3.x)
 - [MySQL](https://dev.mysql.com/downloads/installer/)
 
